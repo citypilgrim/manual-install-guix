@@ -17,6 +17,10 @@ gpg --verify guix-binary-1.4.0.x86_64-linux.tar.xz
 tar --warning=no-timestamp -xf \
     guix-binary-1.4.0.x86_64-linux.tar.xz
 mv var/guix /var/ && mv gnu /
+rm -rf var gnu
+chmod 777 /tmp       # unzipping binary resulted in permissions change
+
+# installing guix profile
 mkdir -p ~root/.config/guix
 ln -sf /var/guix/profiles/per-user/root/current-guix \
    ~root/.config/guix/current
@@ -46,3 +50,21 @@ guix archive --authorize < \
      ~root/.config/guix/current/share/guix/ci.guix.gnu.org.pub
 guix archive --authorize < \
      ~root/.config/guix/current/share/guix/bordeaux.guix.gnu.org.pub
+
+# adding guix daemon to the service
+
+## systemd
+cp ~root/.config/guix/current/lib/systemd/system/gnu-store.mount \
+   ~root/.config/guix/current/lib/systemd/system/guix-daemon.service \
+   /etc/systemd/system/
+systemctl enable --now gnu-store.mount guix-daemon
+
+# ## Upstart
+# initctl reload-configuration
+# cp ~root/.config/guix/current/lib/upstart/system/guix-daemon.conf \
+#    /etc/init/
+# start guix-daemon
+
+# ## run manually
+# ~root/.config/guix/current/bin/guix-daemon \
+#     --build-users-group=guixbuild
